@@ -450,6 +450,9 @@ void print_usage(char *name)
 			"\t [-i|--intr] \n"
 			"\t [-I SIGNAL|--intr_signal=SIGNAL] \n"
 			"\t [-O|--read_only] \n"
+#ifdef WIN32
+			"\t [-v volume label|--volname=volume label] \n"
+#endif
 			);
 	exit(0);
 }
@@ -499,6 +502,9 @@ int main(int argc, char *argv[])
 		{ "readdir_ino", required_argument, 0, 'Q' },
 		{ "multithread", required_argument, 0, 't' },
 		{ "read_only", no_argument, 0, 'O' },
+#ifdef WIN32
+		{ "volname", required_argument, 0, 'v' },
+#endif
 		{ NULL, 0, 0, 0 }
 	};
 
@@ -523,6 +529,7 @@ int main(int argc, char *argv[])
 	char fuse_attr_timeout_arg[32];
 	char fuse_ac_attr_timeout_arg[32];
 	char fuse_intr_signal_arg[32];
+	char fuse_volname_arg[64];
 
 	struct nfs_url *urls = NULL;
 
@@ -563,7 +570,7 @@ int main(int argc, char *argv[])
 		NULL,
         };
 
-	while ((c = getopt_long(argc, argv, "?am:n:U:G:u:g:Dp:drklhf:s:biR:W:H:ASK:E:N:T:C:oYI:qQctO", long_opts, &opt_idx)) > 0) {
+	while ((c = getopt_long(argc, argv, "?am:n:U:G:u:g:Dp:drklhf:s:biR:W:H:ASK:E:N:T:C:v:oYI:qQctO", long_opts, &opt_idx)) > 0) {
 		switch (c) {
 		case '?':
 			print_usage(argv[0]);
@@ -672,6 +679,10 @@ int main(int argc, char *argv[])
 			snprintf(fuse_ac_attr_timeout_arg, sizeof(fuse_ac_attr_timeout_arg), "-oac_attr_timeout=%s", strdup(optarg));
 			fuse_nfs_argv[fuse_nfs_argc++] = fuse_ac_attr_timeout_arg;
 			break;
+		case 'v':
+			snprintf(fuse_volname_arg, sizeof(fuse_volname_arg), "-ovolname=%s", strdup(optarg));
+			fuse_nfs_argv[fuse_nfs_argc++] = fuse_volname_arg;
+			break;
 		case 'o':
             fusenfs_allow_other_own_ids=1;
 			break;
@@ -706,7 +717,7 @@ int main(int argc, char *argv[])
 		ret = 10;
 		goto finished;
 	}
-	
+
 	/* Set allow_other if not defined and fusenfs_allow_other_own_ids defined */
 	if (fusenfs_allow_other_own_ids)
 	{
