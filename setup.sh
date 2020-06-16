@@ -2,4 +2,4 @@
 
 set -e
 
-autoreconf -fiv || autorecong -fiv
+autoreconf -fiv || autoreconf -fiv
